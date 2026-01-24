@@ -63,4 +63,6 @@ firestore-debug.log*
 ui-debug.log*
 
 # Large assets
-assets/large/
+# Project specific
+specs/
+.specify/

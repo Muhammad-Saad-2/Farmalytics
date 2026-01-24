@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter/material.dart';
+import '../../weather/weather_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -38,7 +39,7 @@ class NotificationService {
     required String cropName,
     required TimeOfDay time,
     required DateTime startDate,
-    List<dynamic>? forecast, // Pass forecast data for smart logic
+    List<ForecastDay>? forecast, // Pass forecast data for smart logic
   }) async {
     final now = DateTime.now();
     
@@ -61,17 +62,22 @@ class NotificationService {
 
     // Smart logic: Check forecast for the scheduled date
     if (forecast != null && forecast.isNotEmpty) {
-      final dateStr = '${scheduledDate.year}-${scheduledDate.month.toString().padLeft(2, '0')}-${scheduledDate.day.toString().padLeft(2, '0')}';
-      
-      // Try to find the forecast for this date
-      final dayForecast = forecast.firstWhere(
-        (day) => day.date == dateStr,
-        orElse: () => null,
-      );
+      final dateStr =
+          '${scheduledDate.year}-${scheduledDate.month.toString().padLeft(2, '0')}-${scheduledDate.day.toString().padLeft(2, '0')}';
 
-      if (dayForecast != null && dayForecast.condition.toLowerCase().contains('rain')) {
+      // Try to find the forecast for this date
+      // Fix: Use a type-safe approach for firstWhere orElse and correct date comparison
+      final dayForecast = forecast.where((day) {
+        final forecastDateStr =
+            '${day.date.year}-${day.date.month.toString().padLeft(2, '0')}-${day.date.day.toString().padLeft(2, '0')}';
+        return forecastDateStr == dateStr;
+      }).firstOrNull;
+
+      if (dayForecast != null &&
+          dayForecast.condition.toLowerCase().contains('rain')) {
         title = 'Rainy Day Alert! 🌧️';
-        body = 'Rain is predicted for $cropName today. Consider skipping your scheduled watering.';
+        body =
+            'Rain is predicted for $cropName today. Consider skipping your scheduled watering.';
       }
     }
 
